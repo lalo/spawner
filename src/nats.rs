@@ -2,7 +2,7 @@
 //!
 //! These use serde to serialize data to/from JSON over nats into Rust types.
 
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, Result, Context};
 use futures::channel::oneshot::channel;
 use futures::Stream;
 use nats::asynk::{Connection, Message, Subscription};
@@ -180,8 +180,8 @@ pub struct TypedNats {
 
 impl TypedNats {
     pub async fn connect(nats_url: &str) -> Result<Self> {
-        let nc = nats::asynk::connect(nats_url).await?;
-        let jetstream = nats::jetstream::new(nats::connect(nats_url)?);
+        let nc = nats::asynk::connect(nats_url).await.context("Error connecting to async NATS.")?;
+        let jetstream = nats::jetstream::new(nats::connect(nats_url).context("Error connecting to sync NATS.")?);
 
         Ok(Self::new(nc, jetstream))
     }
